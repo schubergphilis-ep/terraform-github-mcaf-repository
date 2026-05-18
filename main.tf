@@ -59,7 +59,6 @@ resource "github_repository" "default" {
   squash_merge_commit_title   = var.squash_merge_commit_title
   topics                      = var.topics
   visibility                  = var.visibility
-  vulnerability_alerts        = var.vulnerability_alerts
 
   dynamic "template" {
     for_each = var.template_repository != null ? { create = true } : {}
@@ -144,6 +143,11 @@ resource "github_dependabot_secret" "encrypted" {
   repository      = github_repository_dependabot_security_updates.default[0].repository
   secret_name     = each.key
   encrypted_value = each.value
+}
+
+resource "github_repository_vulnerability_alerts" "default" {
+  repository = github_repository.default.name
+  enabled    = var.vulnerability_alerts
 }
 
 ################################################################################
