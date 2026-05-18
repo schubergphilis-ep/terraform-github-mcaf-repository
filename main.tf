@@ -29,8 +29,8 @@ locals {
 # Repository
 ################################################################################
 
-#tfsec:ignore:github-repositories-vulnerability-alerts
 resource "github_repository" "default" {
+  # checkov:skip=CKV_GIT_3:Ensure GitHub repository has vulnerability alerts enabled - False positive, this is configured in the separate `github_repository_vulnerability_alerts` resource below. See issue https://github.com/bridgecrewio/checkov/issues/7546
   name                        = var.name
   allow_auto_merge            = var.allow_auto_merge
   allow_merge_commit          = local.allow_merge_commit
