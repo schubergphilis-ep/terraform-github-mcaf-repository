@@ -104,9 +104,8 @@ resource "github_repository_dependabot_security_updates" "default" {
   repository = github_repository.default.name
   enabled    = var.dependabot_enabled
 
-  depends_on = [
-    github_repository.default
-  ]
+  # GitHub rejects any change to automated security fixes unless vulnerability alerts are enabled. 
+  depends_on = [github_repository_vulnerability_alerts.default]
 }
 
 # Configure GitHub Pages for the repository.
@@ -142,7 +141,7 @@ resource "github_dependabot_secret" "encrypted" {
 
   repository      = github_repository_dependabot_security_updates.default[0].repository
   secret_name     = each.key
-  encrypted_value = each.value
+  value_encrypted = each.value
 }
 
 resource "github_repository_vulnerability_alerts" "default" {
