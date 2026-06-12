@@ -58,10 +58,10 @@ resource "github_actions_environment_secret" "default" {
   # checkov:skip=CKV_GIT_4:Ensure GitHub Actions secrets are encrypted - plaintext_value is a sensitive argument and there is no value in using a base64 encoded value here
   for_each = var.secrets
 
-  environment     = github_repository_environment.default.environment
-  plaintext_value = each.value
-  repository      = var.repository
-  secret_name     = each.key
+  environment = github_repository_environment.default.environment
+  repository  = var.repository
+  secret_name = each.key
+  value       = each.value
 }
 
 # FIXME: This can be removed in the next major release (v4)

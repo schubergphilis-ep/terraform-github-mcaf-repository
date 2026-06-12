@@ -188,8 +188,8 @@ run "secrets" {
     error_message = "Secret name does not match: expected mysecret, got ${github_actions_environment_secret.default["mysecret"].secret_name}"
   }
   assert {
-    condition     = github_actions_environment_secret.default["mysecret"].plaintext_value == "myvalue"
-    error_message = "Secret value does not match: expected myvalue, got ${nonsensitive(github_actions_environment_secret.default["mysecret"].plaintext_value)}"
+    condition     = github_actions_environment_secret.default["mysecret"].value == "myvalue"
+    error_message = "Secret value does not match: expected myvalue, got ${nonsensitive(github_actions_environment_secret.default["mysecret"].value)}"
   }
 }
 
