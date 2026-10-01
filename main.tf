@@ -60,6 +60,23 @@ resource "github_repository" "default" {
   topics                      = var.topics
   visibility                  = var.visibility
 
+  # Only the GitHub Secret Protection add-on is configured here. The `advanced_security` block is
+  # intentionally not set: it enables the bundled GitHub Advanced Security license, which includes
+  # the GitHub Code Security add-on.
+  dynamic "security_and_analysis" {
+    for_each = var.secret_protection != null ? { create = true } : {}
+
+    content {
+      secret_scanning {
+        status = var.secret_protection.enabled ? "enabled" : "disabled"
+      }
+
+      secret_scanning_push_protection {
+        status = var.secret_protection.enabled && var.secret_protection.push_protection ? "enabled" : "disabled"
+      }
+    }
+  }
+
   dynamic "template" {
     for_each = var.template_repository != null ? { create = true } : {}
 

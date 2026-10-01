@@ -382,6 +382,15 @@ variable "repository_files" {
   }
 }
 
+variable "secret_protection" {
+  type = object({
+    enabled         = bool
+    push_protection = optional(bool, true)
+  })
+  default     = null
+  description = "Configures the GitHub Secret Protection add-on (secret scanning and push protection). On private and internal repositories this requires a Secret Protection license, billed per active committer. Leave `null` to not manage these settings."
+}
+
 variable "source_repo" {
   type        = string
   default     = null
