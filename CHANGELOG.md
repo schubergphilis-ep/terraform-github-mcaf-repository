@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.1.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.0.3...v6.1.0) (2026-10-01)
+
+
+### 🚀 Features
+
+* add secret_protection variable to enable GitHub Secret Protection ([#2](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/2)) ([557b4ba](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/557b4babe90e388a71dc5ed4941ba6402e321282))
+
 ## [6.0.3](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.0.2...v6.0.3) (2026-06-12)
 
 
@@ -392,4 +399,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v0.1.0...v0.1.1) (2020-03-13)
 
 ## 0.1.0 (2020-02-10)
-
