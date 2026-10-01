@@ -193,6 +193,25 @@ To more easily select a single strategy, you can set the `merge_strategy` variab
 
 Using `merge_strategy` will override the above variables.
 
+## Enabling GitHub Secret Protection
+
+GitHub sells two separate security add-ons for private and internal repositories, each billed per active committer:
+
+| Add-on | What it includes | Module variable |
+|---|---|---|
+| GitHub Secret Protection | Secret scanning and push protection | `secret_protection` |
+| GitHub Code Security | Code scanning, dependency review and Copilot Autofix | Not supported, see below |
+
+Public repositories get both for free.
+
+Use `var.secret_protection` to enable Secret Protection. Push protection is enabled by default when Secret Protection is enabled:
+
+Note that:
+
+- The Secret Protection add-on must be available to your organization before you enable it, otherwise GitHub rejects the change.
+- Leaving `secret_protection` set to `null` (the default) means the module does not manage these settings, for example when they are managed by a code security configuration.
+- Validity checks, non-provider patterns, AI detection and delegated bypass are not supported by the GitHub provider on a repository. Configure them with a [code security configuration](https://docs.github.com/en/code-security/securing-your-organization/introduction-to-securing-your-organization-at-scale/about-enabling-security-features-at-scale) instead.
+
 ## Managing files in a repository
 
 It is possible to create (and manage) files within a GitHub repository using this module. We have a `repository_files` variable that takes a map of files to create; the key represents the name (and path) for the file, and the value is an object with the following attributes:
@@ -313,6 +332,7 @@ module "mcaf-repository" {
 | <a name="input_merge_strategy"></a> [merge\_strategy](#input\_merge\_strategy) | The merge strategy to use for pull requests | `string` | `null` | no |
 | <a name="input_pages"></a> [pages](#input\_pages) | The repository's GitHub Pages configuration. | <pre>object({<br/>    build_type     = string<br/>    branch         = optional(string)<br/>    cname          = optional(string)<br/>    https_enforced = optional(bool)<br/>    path           = optional(string, "/")<br/>    public         = optional(bool)<br/>  })</pre> | `null` | no |
 | <a name="input_repository_files"></a> [repository\_files](#input\_repository\_files) | A map of GitHub repository files that should be created | <pre>map(object({<br/>    branch              = optional(string)<br/>    commit_message      = optional(string)<br/>    commit_prefix       = optional(string)<br/>    content             = string<br/>    managed             = optional(bool, true)<br/>    overwrite_on_create = optional(bool, false)<br/>    skip_ci             = optional(bool, false)<br/>  }))</pre> | `{}` | no |
+| <a name="input_secret_protection"></a> [secret\_protection](#input\_secret\_protection) | Configures the GitHub Secret Protection add-on (secret scanning and push protection). On private and internal repositories this requires a Secret Protection license, billed per active committer. Leave `null` to not manage these settings. | <pre>object({<br/>    enabled         = bool<br/>    push_protection = optional(bool, true)<br/>  })</pre> | `null` | no |
 | <a name="input_source_repo"></a> [source\_repo](#input\_source\_repo) | The source repository to create this repository from in format owner/repo | `string` | `null` | no |
 | <a name="input_squash_merge_commit_message"></a> [squash\_merge\_commit\_message](#input\_squash\_merge\_commit\_message) | The default commit message for squash merges | `string` | `"COMMIT_MESSAGES"` | no |
 | <a name="input_squash_merge_commit_title"></a> [squash\_merge\_commit\_title](#input\_squash\_merge\_commit\_title) | The default commit title for squash merges | `string` | `"PR_TITLE"` | no |
