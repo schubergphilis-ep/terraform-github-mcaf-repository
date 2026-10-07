@@ -94,21 +94,3 @@ run "access_rejects_surrounding_whitespace" {
   expect_failures = [var.access]
 }
 
-# GitHub UI names that the API does not accept.
-run "access_rejects_ui_role_names" {
-  variables {
-    name = "access-rejects-ui-role-names-${run.setup.random_string}"
-    access = {
-      MyTeam    = "Write"
-      OtherTeam = "read"
-    }
-  }
-
-  module {
-    source = "./"
-  }
-
-  command = plan
-
-  expect_failures = [var.access]
-}

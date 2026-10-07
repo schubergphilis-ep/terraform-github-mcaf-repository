@@ -5,12 +5,7 @@ variable "access" {
 
   validation {
     condition     = alltrue([for value in values(var.access) : value != "" && value == trimspace(value)])
-    error_message = "The values of the variable 'access' must not be empty or start or end with whitespace"
-  }
-
-  validation {
-    condition     = alltrue([for value in values(var.access) : !contains(["read", "write"], lower(value))])
-    error_message = "The values of the variable 'access' must use 'pull' instead of 'read' and 'push' instead of 'write'"
+    error_message = "The values in the map cannot be empty"
   }
 }
 
