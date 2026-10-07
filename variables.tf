@@ -1,11 +1,11 @@
 variable "access" {
   type        = map(string)
   default     = {}
-  description = "An optional map with GitHub team names and their access level to the repository"
+  description = "An optional map with GitHub team names and their access level to the repository. The access level is a built-in role (`admin`, `maintain`, `pull`, `push` or `triage`) or the name of a custom repository role"
 
   validation {
-    condition     = alltrue([for value in values(var.access) : can(regex("^(admin|maintain|pull|push)$", lower(value)))])
-    error_message = "The value of the variable 'access' must be one of 'admin', 'maintain', 'pull' or 'push'"
+    condition     = alltrue([for value in values(var.access) : value != "" && value == trimspace(value)])
+    error_message = "The values in the map cannot be empty"
   }
 }
 

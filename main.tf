@@ -282,7 +282,8 @@ data "github_team" "default" {
 resource "github_team_repository" "default" {
   for_each = var.access
 
-  permission = lower(each.value)
+  # Built-in roles are case-insensitive, custom repository role names are passed as-is.
+  permission = contains(["admin", "maintain", "pull", "push", "triage"], lower(each.value)) ? lower(each.value) : each.value
   repository = github_repository.default.name
   team_id    = data.github_team.default[each.key].id
 }
