@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.2.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.1.0...v6.2.0) (2026-10-07)
+
+
+### 🚀 Features
+
+* allow custom repository roles in access ([#4](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/4)) ([f16f7ac](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/f16f7ac09d8fd9134350495045662736cd68471d))
+
 ## [6.1.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.0.3...v6.1.0) (2026-10-01)
 
 
