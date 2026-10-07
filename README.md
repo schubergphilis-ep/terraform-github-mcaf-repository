@@ -159,6 +159,20 @@ module "mcaf-repository" {
 
 The module will use a data resource to look up the team ID and assign the team the desired permissions.
 
+The access level can be one of the built-in roles (`admin`, `maintain`, `pull`, `push` or `triage`) or the name of a [custom repository role](https://docs.github.com/en/organizations/managing-user-access-to-your-organizations-repositories/managing-repository-roles/about-custom-repository-roles). Custom roles must already exist in the organization:
+
+```hcl
+module "mcaf-repository" {
+  source = "schubergphilis/mcaf-repository/github"
+
+  name = "my-repo"
+
+  access = {
+    MyTeam = "maintain-secret-scanning"
+  }
+}
+```
+
 > [!IMPORTANT]
 > If you're creating a GitHub team in the same run/workspace that assigns permissions to the repository, you must set an explicit dependency to ensure the team is created before repository:
 >
@@ -295,7 +309,7 @@ module "mcaf-repository" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_name"></a> [name](#input\_name) | The name of the repository | `string` | n/a | yes |
-| <a name="input_access"></a> [access](#input\_access) | An optional map with GitHub team names and their access level to the repository | `map(string)` | `{}` | no |
+| <a name="input_access"></a> [access](#input\_access) | An optional map with GitHub team names and their access level to the repository. The access level is a built-in role (`admin`, `maintain`, `pull`, `push` or `triage`) or the name of a custom repository role | `map(string)` | `{}` | no |
 | <a name="input_actions_access_level"></a> [actions\_access\_level](#input\_actions\_access\_level) | Control how this repository is used by GitHub Actions workflows in other repositories | `string` | `null` | no |
 | <a name="input_actions_secrets"></a> [actions\_secrets](#input\_actions\_secrets) | An optional map with GitHub action secrets | `map(string)` | `{}` | no |
 | <a name="input_actions_variables"></a> [actions\_variables](#input\_actions\_variables) | An optional map with GitHub Actions variables | `map(string)` | `{}` | no |
