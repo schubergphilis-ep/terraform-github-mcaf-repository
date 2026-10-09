@@ -191,10 +191,11 @@ resource "github_branch_protection" "default" {
 
   for_each = { for k, v in local.branches : k => v if v.branch_protection != null || v.use_branch_protection == true }
 
-  allows_force_pushes = each.value.branch_protection != null ? try(each.value.branch_protection.allows_force_pushes, null) : try(var.default_branch_protection.allows_force_pushes, null)
-  enforce_admins      = each.value.branch_protection != null ? try(each.value.branch_protection.enforce_admins, null) : try(var.default_branch_protection.enforce_admins, null)
-  pattern             = each.key
-  repository_id       = github_repository.default.name
+  allows_force_pushes  = each.value.branch_protection != null ? try(each.value.branch_protection.allows_force_pushes, null) : try(var.default_branch_protection.allows_force_pushes, null)
+  enforce_admins       = each.value.branch_protection != null ? try(each.value.branch_protection.enforce_admins, null) : try(var.default_branch_protection.enforce_admins, null)
+  force_push_bypassers = each.value.branch_protection != null ? try(each.value.branch_protection.force_push_bypassers, []) : try(var.default_branch_protection.force_push_bypassers, [])
+  pattern              = each.key
+  repository_id        = github_repository.default.name
 
   require_signed_commits = each.value.branch_protection != null ? each.value.branch_protection.require_signed_commits : try(var.default_branch_protection.require_signed_commits, null)
 
