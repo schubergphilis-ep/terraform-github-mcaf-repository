@@ -130,6 +130,14 @@ variable "branches" {
   }))
   default     = {}
   description = "An optional map with GitHub branches to create"
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branches :
+      try(!v.branch_protection.allows_force_pushes || length(v.branch_protection.force_push_bypassers) == 0, true)
+    ])
+    error_message = "Setting 'allows_force_pushes' to true is not allowed when 'force_push_bypassers' is not empty. Use 'force_push_bypassers' to grant force push access to specific actors instead."
+  }
 }
 
 variable "custom_properties" {
@@ -190,6 +198,11 @@ variable "default_branch_protection" {
     }
   }
   description = "Default branch protection settings for managed branches"
+
+  validation {
+    condition     = !var.default_branch_protection.allows_force_pushes || length(var.default_branch_protection.force_push_bypassers) == 0
+    error_message = "Setting 'allows_force_pushes' to true is not allowed when 'force_push_bypassers' is not empty. Use 'force_push_bypassers' to grant force push access to specific actors instead."
+  }
 }
 
 variable "delete_branch_on_merge" {
