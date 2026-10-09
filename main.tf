@@ -195,7 +195,7 @@ resource "github_branch_protection" "default" {
   enforce_admins       = each.value.branch_protection != null ? try(each.value.branch_protection.enforce_admins, null) : try(var.default_branch_protection.enforce_admins, null)
   force_push_bypassers = each.value.branch_protection != null ? try(each.value.branch_protection.force_push_bypassers, []) : try(var.default_branch_protection.force_push_bypassers, [])
   pattern              = each.key
-  repository_id       = github_repository.default.name
+  repository_id        = github_repository.default.name
 
   require_signed_commits = each.value.branch_protection != null ? each.value.branch_protection.require_signed_commits : try(var.default_branch_protection.require_signed_commits, null)
 
