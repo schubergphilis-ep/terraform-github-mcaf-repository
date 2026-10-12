@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.3.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.2.0...v6.3.0) (2026-10-12)
+
+
+### 🚀 Features
+
+* Add force_push_bypassers support to branch protection ([#6](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/6)) ([46ff503](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/46ff503a03343d4335aeb31e965d54072e6ae06f))
+
 ## [6.2.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.1.0...v6.2.0) (2026-10-07)
 
 
