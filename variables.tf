@@ -201,7 +201,7 @@ variable "default_branch_protection" {
 
   validation {
     condition     = !var.default_branch_protection.allows_force_pushes || length(var.default_branch_protection.force_push_bypassers) == 0
-    error_message = "Setting 'allows_force_pushes' to true is not allowed when 'force_push_bypassers' is not empty. Use 'force_push_bypassers' to grant force push access to specific actors instead."
+    error_message = "'allows_force_pushes' must be false when 'force_push_bypassers' is set, because the bypassers list already grants force push access."
   }
 }
 
