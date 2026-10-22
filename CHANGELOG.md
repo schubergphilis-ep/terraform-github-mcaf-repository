@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [7.0.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.3.0...v7.0.0) (2026-10-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* pass the team slug as team_id instead of a data source lookup ([#9](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/9))
+
+### 🐛 Fixes
+
+* pass the team slug as team_id instead of a data source lookup ([#9](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/9)) ([e80f8be](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/e80f8be609ddf551c7a2f4b116adbdb0e172943d))
+
 ## [6.3.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.2.0...v6.3.0) (2026-10-12)
 
 
