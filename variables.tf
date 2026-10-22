@@ -1,7 +1,12 @@
 variable "access" {
   type        = map(string)
   default     = {}
-  description = "An optional map with GitHub team names and their access level to the repository. The access level is a built-in role (`admin`, `maintain`, `pull`, `push` or `triage`) or the name of a custom repository role"
+  description = "An optional map with GitHub team slugs (or numeric team IDs) and their access level to the repository. The access level is a built-in role (`admin`, `maintain`, `pull`, `push` or `triage`) or the name of a custom repository role"
+
+  validation {
+    condition     = alltrue([for k in keys(var.access) : can(regex("^[a-z0-9_-]+$", k))])
+    error_message = "Keys of var.access must be GitHub team slugs or numeric IDs (lowercase letters, digits, hyphens or underscores), not team display names."
+  }
 
   validation {
     condition     = alltrue([for value in values(var.access) : value != "" && value == trimspace(value)])

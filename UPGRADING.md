@@ -4,6 +4,16 @@ This document captures breaking changes.
 
 When upgrading, it is important to go from one major version to the next. Skipping major versions may cause errors that are not documented here.
 
+## Upgrading to v7.0.0
+
+### `access`: keys are team slugs
+
+`github_team_repository.default` takes the `var.access` key as `team_id`, which accepts a team slug or a numeric team ID. The module no longer looks the team up with a `github_team` data source. A data source lookup is deferred to apply time when the caller sets `depends_on` on the module and any resource it names has pending changes. Every `team_id` then becomes unknown, and `team_id` forces replacement, so one team change replaced every team grant on every repository.
+
+Keys of `var.access` must be team slugs or numeric IDs. Replace a display name such as `My Team` with its slug, `my-team`.
+
+State written by earlier versions holds the numeric team ID. The first apply after upgrading replaces each grant once, and the team has no access to the repository between the delete and the create. Apply in a quiet window. Later team changes leave the other grants alone.
+
 ## Upgrading to v6.0.0
 
 ### `pages`: migrated to the dedicated `github_repository_pages` resource
