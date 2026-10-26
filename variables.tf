@@ -121,7 +121,7 @@ variable "branch_protection_type" {
 }
 
 variable "branch_ruleset_bypass_actors" {
-  type = list(object({
+  type = set(object({
     actor_id    = optional(number)
     actor_type  = string
     bypass_mode = optional(string, "always")

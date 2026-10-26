@@ -5,12 +5,6 @@ locals {
     var.branches,
   )
 
-  # Branch protection settings per protected branch, falling back to the defaults.
-  protected_branches = {
-    for k, v in local.branches : k => (v.branch_protection != null ? v.branch_protection : var.default_branch_protection)
-    if v.branch_protection != null || v.use_branch_protection == true
-  }
-
   # Use var.merge_strategy value if set, otherwise fallback to the variable value.
   allow_merge_commit = var.merge_strategy != null ? var.merge_strategy == "merge" : var.allow_merge_commit
   allow_rebase_merge = var.merge_strategy != null ? var.merge_strategy == "rebase" : var.allow_rebase_merge
@@ -242,12 +236,15 @@ resource "github_branch_protection" "default" {
 }
 
 resource "github_repository_ruleset" "branches" {
-  for_each = var.branch_protection_type == "ruleset" ? local.protected_branches : {}
+  for_each = {
+    for k, v in local.branches : k => (v.branch_protection != null ? v.branch_protection : var.default_branch_protection)
+    if var.branch_protection_type == "ruleset" && (v.branch_protection != null || v.use_branch_protection == true)
+  }
 
   name        = "Branch protection ${each.key}"
+  enforcement = "active"
   repository  = github_repository.default.name
   target      = "branch"
-  enforcement = "active"
 
   dynamic "bypass_actors" {
     for_each = var.branch_ruleset_bypass_actors
