@@ -5,6 +5,12 @@ locals {
     var.branches,
   )
 
+  # Branch protection settings per protected branch, falling back to the defaults.
+  protected_branches = {
+    for k, v in local.branches : k => (v.branch_protection != null ? v.branch_protection : var.default_branch_protection)
+    if v.branch_protection != null || v.use_branch_protection == true
+  }
+
   # Use var.merge_strategy value if set, otherwise fallback to the variable value.
   allow_merge_commit = var.merge_strategy != null ? var.merge_strategy == "merge" : var.allow_merge_commit
   allow_rebase_merge = var.merge_strategy != null ? var.merge_strategy == "rebase" : var.allow_rebase_merge
@@ -189,7 +195,7 @@ resource "github_branch_default" "default" {
 resource "github_branch_protection" "default" {
   # checkov:skip=CKV_GIT_6:GitHub repository defined in Terraform does not have GPG signatures for all commits - this is a false positive, we default to `true` but checkov can't see this
 
-  for_each = { for k, v in local.branches : k => v if v.branch_protection != null || v.use_branch_protection == true }
+  for_each = { for k, v in local.branches : k => v if var.branch_protection_type == "classic" && (v.branch_protection != null || v.use_branch_protection == true) }
 
   allows_force_pushes  = each.value.branch_protection != null ? try(each.value.branch_protection.allows_force_pushes, null) : try(var.default_branch_protection.allows_force_pushes, null)
   enforce_admins       = each.value.branch_protection != null ? try(each.value.branch_protection.enforce_admins, null) : try(var.default_branch_protection.enforce_admins, null)
@@ -227,6 +233,69 @@ resource "github_branch_protection" "default" {
     content {
       blocks_creations = each.value.branch_protection != null ? try(each.value.branch_protection.restrict_pushes.blocks_creations, null) : try(var.default_branch_protection.restrict_pushes.blocks_creations, null)
       push_allowances  = each.value.branch_protection != null ? try(each.value.branch_protection.restrict_pushes.push_allowances, null) : try(var.default_branch_protection.restrict_pushes.push_allowances, null)
+    }
+  }
+
+  depends_on = [
+    github_branch.default,
+  ]
+}
+
+resource "github_repository_ruleset" "branches" {
+  for_each = var.branch_protection_type == "ruleset" ? local.protected_branches : {}
+
+  name        = "Branch protection ${each.key}"
+  repository  = github_repository.default.name
+  target      = "branch"
+  enforcement = "active"
+
+  dynamic "bypass_actors" {
+    for_each = var.branch_ruleset_bypass_actors
+
+    content {
+      actor_id    = bypass_actors.value.actor_id
+      actor_type  = bypass_actors.value.actor_type
+      bypass_mode = bypass_actors.value.bypass_mode
+    }
+  }
+
+  conditions {
+    ref_name {
+      exclude = []
+      include = ["refs/heads/${each.key}"]
+    }
+  }
+
+  rules {
+    deletion            = true
+    non_fast_forward    = !each.value.allows_force_pushes
+    required_signatures = each.value.require_signed_commits
+
+    dynamic "pull_request" {
+      for_each = each.value.required_reviews != null ? [each.value.required_reviews] : []
+
+      content {
+        dismiss_stale_reviews_on_push   = pull_request.value.dismiss_stale_reviews
+        require_code_owner_review       = pull_request.value.require_code_owner_reviews
+        require_last_push_approval      = pull_request.value.require_last_push_approval
+        required_approving_review_count = pull_request.value.required_approving_review_count
+      }
+    }
+
+    dynamic "required_status_checks" {
+      for_each = length(try(each.value.required_checks.contexts, null) == null ? [] : each.value.required_checks.contexts) > 0 ? [each.value.required_checks] : []
+
+      content {
+        strict_required_status_checks_policy = required_status_checks.value.strict
+
+        dynamic "required_check" {
+          for_each = required_status_checks.value.contexts
+
+          content {
+            context = required_check.value
+          }
+        }
+      }
     }
   }
 

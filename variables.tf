@@ -101,6 +101,35 @@ variable "autolink_references" {
   nullable    = false
 }
 
+variable "branch_protection_type" {
+  type        = string
+  default     = "classic"
+  description = "Whether managed branches are protected with classic branch protection (`classic`) or repository rulesets (`ruleset`)"
+
+  validation {
+    condition     = contains(["classic", "ruleset"], var.branch_protection_type)
+    error_message = "The value of 'branch_protection_type' must be one of 'classic' or 'ruleset'."
+  }
+
+  validation {
+    condition = var.branch_protection_type == "classic" || alltrue([
+      for p in concat([var.default_branch_protection], [for v in values(var.branches) : v.branch_protection if v.branch_protection != null]) :
+      length(p.force_push_bypassers) == 0 && p.restrict_pushes == null && try(p.required_reviews.dismissal_restrictions, null) == null && try(p.required_reviews.pull_request_bypassers, null) == null
+    ])
+    error_message = "'force_push_bypassers', 'restrict_pushes', 'dismissal_restrictions' and 'pull_request_bypassers' have no ruleset equivalent; use 'branch_ruleset_bypass_actors' instead."
+  }
+}
+
+variable "branch_ruleset_bypass_actors" {
+  type = list(object({
+    actor_id    = optional(number)
+    actor_type  = string
+    bypass_mode = optional(string, "always")
+  }))
+  default     = []
+  description = "Actors that can bypass the branch rulesets when `branch_protection_type` is `ruleset`; replaces `enforce_admins`, which rulesets do not support"
+}
+
 variable "branches" {
   type = map(object({
     source_branch         = optional(string)
