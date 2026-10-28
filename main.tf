@@ -236,18 +236,15 @@ resource "github_branch_protection" "default" {
 }
 
 resource "github_repository_ruleset" "branches" {
-  for_each = {
-    for k, v in local.branches : k => (v.branch_protection != null ? v.branch_protection : var.default_branch_protection)
-    if var.branch_protection_type == "ruleset" && (v.branch_protection != null || v.use_branch_protection == true)
-  }
+  for_each = var.branch_protection_type == "ruleset" ? var.branch_rulesets : {}
 
-  name        = "Branch protection ${each.key}"
-  enforcement = "active"
+  name        = each.key
+  enforcement = each.value.enforcement
   repository  = github_repository.default.name
   target      = "branch"
 
   dynamic "bypass_actors" {
-    for_each = var.branch_ruleset_bypass_actors
+    for_each = each.value.bypass_actors
 
     content {
       actor_id    = bypass_actors.value.actor_id
@@ -258,38 +255,53 @@ resource "github_repository_ruleset" "branches" {
 
   conditions {
     ref_name {
-      exclude = []
-      include = ["refs/heads/${each.key}"]
+      exclude = each.value.conditions.ref_name.exclude
+      include = each.value.conditions.ref_name.include
     }
   }
 
   rules {
-    deletion            = true
-    non_fast_forward    = !each.value.allows_force_pushes
-    required_signatures = each.value.require_signed_commits
+    creation                = each.value.rules.creation
+    deletion                = each.value.rules.deletion
+    non_fast_forward        = each.value.rules.non_fast_forward
+    required_linear_history = each.value.rules.required_linear_history
+    required_signatures     = each.value.rules.required_signatures
+    update                  = each.value.rules.update
 
     dynamic "pull_request" {
-      for_each = each.value.required_reviews != null ? [each.value.required_reviews] : []
+      for_each = each.value.rules.pull_request != null ? [each.value.rules.pull_request] : []
 
       content {
-        dismiss_stale_reviews_on_push   = pull_request.value.dismiss_stale_reviews
-        require_code_owner_review       = pull_request.value.require_code_owner_reviews
-        require_last_push_approval      = pull_request.value.require_last_push_approval
-        required_approving_review_count = pull_request.value.required_approving_review_count
+        allowed_merge_methods             = pull_request.value.allowed_merge_methods
+        dismiss_stale_reviews_on_push     = pull_request.value.dismiss_stale_reviews_on_push
+        require_code_owner_review         = pull_request.value.require_code_owner_review
+        require_last_push_approval        = pull_request.value.require_last_push_approval
+        required_approving_review_count   = pull_request.value.required_approving_review_count
+        required_review_thread_resolution = pull_request.value.required_review_thread_resolution
+      }
+    }
+
+    dynamic "required_deployments" {
+      for_each = length(each.value.rules.required_deployment_environments) > 0 ? [each.value.rules.required_deployment_environments] : []
+
+      content {
+        required_deployment_environments = required_deployments.value
       }
     }
 
     dynamic "required_status_checks" {
-      for_each = length(try(each.value.required_checks.contexts, null) == null ? [] : each.value.required_checks.contexts) > 0 ? [each.value.required_checks] : []
+      for_each = each.value.rules.required_status_checks != null ? [each.value.rules.required_status_checks] : []
 
       content {
-        strict_required_status_checks_policy = required_status_checks.value.strict
+        do_not_enforce_on_create             = required_status_checks.value.do_not_enforce_on_create
+        strict_required_status_checks_policy = required_status_checks.value.strict_required_status_checks_policy
 
         dynamic "required_check" {
-          for_each = required_status_checks.value.contexts
+          for_each = required_status_checks.value.required_checks
 
           content {
-            context = required_check.value
+            context        = required_check.value.context
+            integration_id = required_check.value.integration_id
           }
         }
       }

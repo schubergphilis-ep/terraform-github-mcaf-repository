@@ -77,8 +77,18 @@ module "with_no_branch_protection" {
   }
 }
 
-// This example protects the branches with repository rulesets instead of classic branch protection
-module "with_rulesets" {
+// This example protects the default branch with the default ruleset instead of classic branch protection
+module "with_default_ruleset" {
+  #checkov:skip=CKV_GIT_4:Ensure GitHub Actions secrets are encrypted - n/a for the example
+
+  source = "../.."
+
+  name                   = "basic"
+  branch_protection_type = "ruleset"
+}
+
+// This example creates a custom ruleset for the default and release branches
+module "with_custom_rulesets" {
   #checkov:skip=CKV_GIT_4:Ensure GitHub Actions secrets are encrypted - n/a for the example
 
   source = "../.."
@@ -86,11 +96,23 @@ module "with_rulesets" {
   name                   = "basic"
   branch_protection_type = "ruleset"
 
-  branch_ruleset_bypass_actors = [
-    { actor_type = "OrganizationAdmin", bypass_mode = "pull_request" },
-  ]
+  branch_rulesets = {
+    protected = {
+      bypass_actors = [
+        { actor_type = "OrganizationAdmin", bypass_mode = "pull_request" },
+      ]
 
-  branches = {
-    develop = {}
+      conditions = {
+        ref_name = { include = ["~DEFAULT_BRANCH", "refs/heads/release/**"] }
+      }
+
+      rules = {
+        pull_request = { required_approving_review_count = 1 }
+
+        required_status_checks = {
+          required_checks = [{ context = "test" }]
+        }
+      }
+    }
   }
 }
