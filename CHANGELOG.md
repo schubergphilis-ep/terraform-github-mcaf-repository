@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [7.1.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v7.0.0...v7.1.0) (2026-10-29)
+
+
+### 🚀 Features
+
+* add branch_protection_type to protect branches with rulesets ([#12](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/12)) ([a3e1e42](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/a3e1e4269a5806e5deacacf6c9646d6b4df08cd7))
+
 ## [7.0.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v6.3.0...v7.0.0) (2026-10-22)
 
 
