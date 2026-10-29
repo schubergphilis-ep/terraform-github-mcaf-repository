@@ -104,7 +104,7 @@ variable "autolink_references" {
 variable "branch_protection_type" {
   type        = string
   default     = "classic"
-  description = "Whether branches are protected with classic branch protection (`classic`, configured via `branches` and `default_branch_protection`) or repository rulesets (`ruleset`, configured via `branch_rulesets`)"
+  description = "Whether branches are protected with classic branch protection (`classic`, configured via `default_branch_protection` and `branches`) or repository rulesets (`ruleset`, configured via `branch_rulesets`). In both modes `use_branch_protection` selects the protected branches"
 
   validation {
     condition     = contains(["classic", "ruleset"], var.branch_protection_type)
@@ -116,18 +116,24 @@ variable "branch_rulesets" {
   type = map(object({
     enforcement = optional(string, "active")
 
-    bypass_actors = optional(set(object({
-      actor_id    = optional(number)
-      actor_type  = string
-      bypass_mode = optional(string, "always")
-    })), [])
+    bypass_actors = optional(
+      list(object({
+        actor_id    = optional(number)
+        actor_type  = string
+        bypass_mode = optional(string, "always")
+      })),
+      [
+        { actor_id = 5, actor_type = "RepositoryRole", bypass_mode = "always" }, # Repository admins
+        { actor_id = null, actor_type = "OrganizationAdmin", bypass_mode = "always" },
+      ]
+    )
 
-    conditions = object({
+    conditions = optional(object({
       ref_name = object({
         exclude = optional(list(string), [])
         include = list(string)
       })
-    })
+    }))
 
     rules = optional(object({
       creation                         = optional(bool, false)
@@ -159,12 +165,20 @@ variable "branch_rulesets" {
     }), {})
   }))
   default = {
-    default-branch = {
-      conditions = { ref_name = { include = ["~DEFAULT_BRANCH"] } }
-      rules      = { pull_request = {} }
+    "Branch protection" = {
+      rules = { pull_request = {} }
     }
   }
-  description = "Branch rulesets to create when `branch_protection_type` is `ruleset`, keyed by ruleset name. The default protects the default branch like `default_branch_protection` does, without bypass actors"
+  description = "Branch rulesets to create when `branch_protection_type` is `ruleset`, keyed by ruleset name. A ruleset without `conditions` protects every managed branch that has `use_branch_protection` set. Repository and organization admins can bypass a ruleset unless `bypass_actors` is set to `[]`. Pull requests are only required when `rules.pull_request` is set"
+  nullable    = false
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branch_rulesets :
+      try(length(v.rules.required_status_checks.required_checks) > 0, true)
+    ])
+    error_message = "'required_checks' must contain at least one check when 'required_status_checks' is set."
+  }
 }
 
 variable "branches" {
@@ -208,6 +222,11 @@ variable "branches" {
       try(!v.branch_protection.allows_force_pushes || length(v.branch_protection.force_push_bypassers) == 0, true)
     ])
     error_message = "'allows_force_pushes' must be false when 'force_push_bypassers' is set, because the bypassers list already grants force push access."
+  }
+
+  validation {
+    condition     = var.branch_protection_type == "classic" || alltrue([for _, v in var.branches : v.branch_protection == null])
+    error_message = "'branch_protection' is only used when 'branch_protection_type' is 'classic'. Configure rulesets with 'branch_rulesets' instead."
   }
 }
 

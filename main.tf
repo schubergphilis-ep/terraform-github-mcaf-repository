@@ -5,6 +5,9 @@ locals {
     var.branches,
   )
 
+  // Branches protected by classic branch protection or, in ruleset mode, by rulesets without conditions.
+  protected_branches = [for k, v in local.branches : k if v.branch_protection != null || v.use_branch_protection == true]
+
   # Use var.merge_strategy value if set, otherwise fallback to the variable value.
   allow_merge_commit = var.merge_strategy != null ? var.merge_strategy == "merge" : var.allow_merge_commit
   allow_rebase_merge = var.merge_strategy != null ? var.merge_strategy == "rebase" : var.allow_rebase_merge
@@ -189,7 +192,7 @@ resource "github_branch_default" "default" {
 resource "github_branch_protection" "default" {
   # checkov:skip=CKV_GIT_6:GitHub repository defined in Terraform does not have GPG signatures for all commits - this is a false positive, we default to `true` but checkov can't see this
 
-  for_each = { for k, v in local.branches : k => v if var.branch_protection_type == "classic" && (v.branch_protection != null || v.use_branch_protection == true) }
+  for_each = { for k in local.protected_branches : k => local.branches[k] if var.branch_protection_type == "classic" }
 
   allows_force_pushes  = each.value.branch_protection != null ? try(each.value.branch_protection.allows_force_pushes, null) : try(var.default_branch_protection.allows_force_pushes, null)
   enforce_admins       = each.value.branch_protection != null ? try(each.value.branch_protection.enforce_admins, null) : try(var.default_branch_protection.enforce_admins, null)
@@ -236,7 +239,11 @@ resource "github_branch_protection" "default" {
 }
 
 resource "github_repository_ruleset" "branches" {
-  for_each = var.branch_protection_type == "ruleset" ? var.branch_rulesets : {}
+  # Rulesets without conditions protect the managed branches, and are skipped when there are none.
+  for_each = {
+    for k, v in var.branch_rulesets : k => v
+    if var.branch_protection_type == "ruleset" && (v.conditions != null || length(local.protected_branches) > 0)
+  }
 
   name        = each.key
   enforcement = each.value.enforcement
@@ -255,8 +262,8 @@ resource "github_repository_ruleset" "branches" {
 
   conditions {
     ref_name {
-      exclude = each.value.conditions.ref_name.exclude
-      include = each.value.conditions.ref_name.include
+      exclude = each.value.conditions != null ? each.value.conditions.ref_name.exclude : []
+      include = each.value.conditions != null ? each.value.conditions.ref_name.include : [for branch in local.protected_branches : "refs/heads/${branch}"]
     }
   }
 
