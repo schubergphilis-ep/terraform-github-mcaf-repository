@@ -109,6 +109,51 @@ module "mcaf-repository" {
 }
 ```
 
+To protect branches with repository rulesets instead of classic branch protection, set `branch_protection_type` to `ruleset`. Branches are still created from `branches`, and `use_branch_protection` still selects which of them are protected, but they are protected by the rulesets in `branch_rulesets` instead of `default_branch_protection` and `branch_protection`. Setting `branch_protection` on a branch in ruleset mode is an error.
+
+The entries in `branch_rulesets` follow the shape of the `github_repository_ruleset` resource:
+
+- A ruleset without `conditions` protects every protected branch: the default branch, and every branch in `branches` with `use_branch_protection` set. A ruleset with `conditions` targets the given ref patterns instead, such as `refs/heads/release/**` or `~ALL`.
+- Repository and organization admins can bypass a ruleset, like classic protection without `enforce_admins`. Set `bypass_actors = []` to enforce a ruleset for admins too.
+- Pull requests are only required when `rules.pull_request` is set.
+
+By default a single ruleset named `Branch protection` protects every protected branch: it blocks deletion and force pushes, requires signed commits, and requires pull requests with 2 approvals, code owner review and stale review dismissal. Setting `branch_rulesets` replaces this default:
+
+```hcl
+module "mcaf-repository" {
+  source = "schubergphilis/mcaf-repository/github"
+
+  name                   = "my-repo"
+  branch_protection_type = "ruleset"
+
+  branches = {
+    develop = {}
+  }
+
+  branch_rulesets = {
+    "Branch protection" = {
+      rules = {
+        pull_request = { required_approving_review_count = 1 }
+
+        required_status_checks = {
+          required_checks = [{ context = "test" }]
+        }
+      }
+    }
+
+    "Release branches" = {
+      bypass_actors = []
+
+      conditions = {
+        ref_name = { include = ["refs/heads/release/**"] }
+      }
+    }
+  }
+}
+```
+
+Switching an existing repository replaces its classic branch protection with rulesets in a single apply. Classic protection settings are not carried over, so review `branch_rulesets` before switching. Rulesets match full ref names, so a classic `release/*` pattern becomes `refs/heads/release/*`.
+
 For more examples, see the [branches examples](/examples/branches/main.tf).
 
 ## Configuring autolink references
@@ -298,6 +343,7 @@ module "mcaf-repository" {
 | [github_repository_file.managed](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | resource |
 | [github_repository_file.unmanaged](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | resource |
 | [github_repository_pages.default](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_pages) | resource |
+| [github_repository_ruleset.branches](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_ruleset) | resource |
 | [github_repository_ruleset.default](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_ruleset) | resource |
 | [github_repository_vulnerability_alerts.default](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_vulnerability_alerts) | resource |
 | [github_team_repository.default](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_repository) | resource |
@@ -322,6 +368,8 @@ module "mcaf-repository" {
 | <a name="input_archived"></a> [archived](#input\_archived) | Specifies if the repository should be archived | `bool` | `false` | no |
 | <a name="input_auto_init"></a> [auto\_init](#input\_auto\_init) | Disable to not produce an initial commit in the repository | `bool` | `true` | no |
 | <a name="input_autolink_references"></a> [autolink\_references](#input\_autolink\_references) | Optional map with autolink reference key prefix and their corresponding URL templates | <pre>map(object({<br/>    is_alphanumeric = optional(bool, false)<br/>    url_template    = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_branch_protection_type"></a> [branch\_protection\_type](#input\_branch\_protection\_type) | Whether branches are protected with classic branch protection (`classic`, configured via `default_branch_protection` and `branches`) or repository rulesets (`ruleset`, configured via `branch_rulesets`). In both modes `use_branch_protection` selects the protected branches | `string` | `"classic"` | no |
+| <a name="input_branch_rulesets"></a> [branch\_rulesets](#input\_branch\_rulesets) | Branch rulesets to create when `branch_protection_type` is `ruleset`, keyed by ruleset name. A ruleset without `conditions` protects every managed branch that has `use_branch_protection` set. Repository and organization admins can bypass a ruleset unless `bypass_actors` is set to `[]`. Pull requests are only required when `rules.pull_request` is set | <pre>map(object({<br/>    enforcement = optional(string, "active")<br/><br/>    bypass_actors = optional(<br/>      list(object({<br/>        actor_id    = optional(number)<br/>        actor_type  = string<br/>        bypass_mode = optional(string, "always")<br/>      })),<br/>      [<br/>        { actor_id = 5, actor_type = "RepositoryRole", bypass_mode = "always" }, # Repository admins<br/>        { actor_id = null, actor_type = "OrganizationAdmin", bypass_mode = "always" },<br/>      ]<br/>    )<br/><br/>    conditions = optional(object({<br/>      ref_name = object({<br/>        exclude = optional(list(string), [])<br/>        include = list(string)<br/>      })<br/>    }))<br/><br/>    rules = optional(object({<br/>      creation                         = optional(bool, false)<br/>      deletion                         = optional(bool, true)<br/>      non_fast_forward                 = optional(bool, true)<br/>      required_deployment_environments = optional(list(string), [])<br/>      required_linear_history          = optional(bool, false)<br/>      required_signatures              = optional(bool, true)<br/>      update                           = optional(bool, false)<br/><br/>      pull_request = optional(object({<br/>        allowed_merge_methods             = optional(list(string))<br/>        dismiss_stale_reviews_on_push     = optional(bool, true)<br/>        require_code_owner_review         = optional(bool, true)<br/>        require_last_push_approval        = optional(bool, false)<br/>        required_approving_review_count   = optional(number, 2)<br/>        required_review_thread_resolution = optional(bool, false)<br/>      }))<br/><br/>      required_status_checks = optional(object({<br/>        do_not_enforce_on_create             = optional(bool, false)<br/>        strict_required_status_checks_policy = optional(bool, false)<br/><br/>        required_checks = set(object({<br/>          context        = string<br/>          integration_id = optional(number)<br/>        }))<br/>      }))<br/>    }), {})<br/>  }))</pre> | <pre>{<br/>  "Branch protection": {<br/>    "rules": {<br/>      "pull_request": {}<br/>    }<br/>  }<br/>}</pre> | no |
 | <a name="input_branches"></a> [branches](#input\_branches) | An optional map with GitHub branches to create | <pre>map(object({<br/>    source_branch         = optional(string)<br/>    source_sha            = optional(string)<br/>    use_branch_protection = optional(bool, true)<br/><br/>    branch_protection = optional(object({<br/>      allows_force_pushes    = optional(bool, false)<br/>      enforce_admins         = optional(bool, false)<br/>      force_push_bypassers   = optional(list(string), [])<br/>      require_signed_commits = optional(bool, true)<br/><br/>      required_checks = optional(object({<br/>        strict   = optional(bool)<br/>        contexts = optional(list(string))<br/>      }))<br/><br/>      restrict_pushes = optional(object({<br/>        blocks_creations = optional(bool)<br/>        push_allowances  = optional(list(string))<br/>      }))<br/><br/>      required_reviews = optional(object({<br/>        dismiss_stale_reviews           = optional(bool, true)<br/>        dismissal_restrictions          = optional(list(string))<br/>        pull_request_bypassers          = optional(list(string))<br/>        require_code_owner_reviews      = optional(bool, true)<br/>        require_last_push_approval      = optional(bool, null)<br/>        required_approving_review_count = optional(number, 2)<br/>      }))<br/>    }), null)<br/>  }))</pre> | `{}` | no |
 | <a name="input_custom_properties"></a> [custom\_properties](#input\_custom\_properties) | An optional map of custom properties to set on the repository. The custom properties need to be defined on the org level beforehand to be used here. | <pre>map(object({<br/>    property_name  = string<br/>    property_type  = string<br/>    property_value = list(string)<br/>  }))</pre> | `{}` | no |
 | <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Name of the default branch for the GitHub repository | `string` | `"main"` | no |

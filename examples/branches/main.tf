@@ -76,3 +76,45 @@ module "with_no_branch_protection" {
     }
   }
 }
+
+// This example protects every managed branch with the default ruleset instead of classic branch protection
+module "with_default_ruleset" {
+  #checkov:skip=CKV_GIT_4:Ensure GitHub Actions secrets are encrypted - n/a for the example
+
+  source = "../.."
+
+  name                   = "basic"
+  branch_protection_type = "ruleset"
+
+  branches = {
+    develop = {}
+  }
+}
+
+// This example protects the managed branches with required checks, and release branches with a pattern ruleset
+module "with_custom_rulesets" {
+  #checkov:skip=CKV_GIT_4:Ensure GitHub Actions secrets are encrypted - n/a for the example
+
+  source = "../.."
+
+  name                   = "basic"
+  branch_protection_type = "ruleset"
+
+  branch_rulesets = {
+    "Branch protection" = {
+      rules = {
+        pull_request = { required_approving_review_count = 1 }
+
+        required_status_checks = {
+          required_checks = [{ context = "test" }]
+        }
+      }
+    }
+
+    "Release branches" = {
+      conditions = {
+        ref_name = { include = ["refs/heads/release/**"] }
+      }
+    }
+  }
+}
