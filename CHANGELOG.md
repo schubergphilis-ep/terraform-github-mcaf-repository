@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [8.0.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v7.1.0...v8.0.0) (2026-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* set minimum reviewers on PRs to 1 ([#14](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/14))
+
+### 🚀 Features
+
+* set minimum reviewers on PRs to 1 ([e427cf8](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/e427cf8cb89bfc9a431e1ce7768d7b85c01ff522))
+* set minimum reviewers on PRs to 1 ([#14](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/14)) ([e427cf8](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/e427cf8cb89bfc9a431e1ce7768d7b85c01ff522))
+
 ## [7.1.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v7.0.0...v7.1.0) (2026-10-29)
 
 
