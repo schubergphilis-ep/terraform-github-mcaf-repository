@@ -149,7 +149,7 @@ variable "branch_rulesets" {
         dismiss_stale_reviews_on_push     = optional(bool, true)
         require_code_owner_review         = optional(bool, true)
         require_last_push_approval        = optional(bool, false)
-        required_approving_review_count   = optional(number, 2)
+        required_approving_review_count   = optional(number, 1)
         required_review_thread_resolution = optional(bool, false)
       }))
 
@@ -209,7 +209,7 @@ variable "branches" {
         pull_request_bypassers          = optional(list(string))
         require_code_owner_reviews      = optional(bool, true)
         require_last_push_approval      = optional(bool, null)
-        required_approving_review_count = optional(number, 2)
+        required_approving_review_count = optional(number, 1)
       }))
     }), null)
   }))
@@ -269,7 +269,7 @@ variable "default_branch_protection" {
       pull_request_bypassers          = optional(list(string))
       require_code_owner_reviews      = optional(bool, true)
       require_last_push_approval      = optional(bool, null)
-      required_approving_review_count = optional(number, 2)
+      required_approving_review_count = optional(number, 1)
     }))
 
     restrict_pushes = optional(object({
@@ -283,7 +283,7 @@ variable "default_branch_protection" {
 
     required_reviews = {
       dismiss_stale_reviews           = true
-      required_approving_review_count = 2
+      required_approving_review_count = 1
       require_code_owner_reviews      = true
     }
   }

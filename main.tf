@@ -124,7 +124,7 @@ resource "github_repository_dependabot_security_updates" "default" {
   repository = github_repository.default.name
   enabled    = var.dependabot_enabled
 
-  # GitHub rejects any change to automated security fixes unless vulnerability alerts are enabled. 
+  # GitHub rejects any change to automated security fixes unless vulnerability alerts are enabled.
   depends_on = [github_repository_vulnerability_alerts.default]
 }
 

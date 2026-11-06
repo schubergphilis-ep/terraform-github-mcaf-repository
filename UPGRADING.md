@@ -4,6 +4,14 @@ This document captures breaking changes.
 
 When upgrading, it is important to go from one major version to the next. Skipping major versions may cause errors that are not documented here.
 
+## Upgrading to v8.0.0
+
+### Pull requests require 1 approval by default
+
+The default `required_approving_review_count` is now `1` instead of `2`. This applies to the default ruleset (`branch_rulesets[*].rules.pull_request`) and to classic branch protection (`default_branch_protection.required_reviews` and `branches[*].branch_protection.required_reviews`).
+
+Repositories that rely on the default will have their protection relaxed on the next apply. To keep requiring 2 approvals, set `required_approving_review_count = 2` explicitly.
+
 ## Upgrading to v7.0.0
 
 ### `access`: keys are team slugs

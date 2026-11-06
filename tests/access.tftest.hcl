@@ -101,4 +101,3 @@ run "access_rejects_team_display_name" {
 
   expect_failures = [var.access]
 }
-

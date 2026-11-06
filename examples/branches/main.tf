@@ -103,7 +103,7 @@ module "with_custom_rulesets" {
   branch_rulesets = {
     "Branch protection" = {
       rules = {
-        pull_request = { required_approving_review_count = 1 }
+        pull_request = { required_approving_review_count = 2 }
 
         required_status_checks = {
           required_checks = [{ context = "test" }]
