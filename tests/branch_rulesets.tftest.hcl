@@ -92,7 +92,7 @@ run "ruleset_default" {
   }
 
   assert {
-    condition     = resource.github_repository_ruleset.branches["Branch protection"].rules[0].pull_request[0].required_approving_review_count == 2
+    condition     = resource.github_repository_ruleset.branches["Branch protection"].rules[0].pull_request[0].required_approving_review_count == 1
     error_message = "Default required_approving_review_count does not match"
   }
 
@@ -148,7 +148,7 @@ run "ruleset_custom" {
       managed = {
         rules = {
           pull_request = {
-            required_approving_review_count = 1
+            required_approving_review_count = 2
             require_code_owner_review       = false
           }
 
@@ -234,7 +234,7 @@ run "ruleset_custom" {
   }
 
   assert {
-    condition     = resource.github_repository_ruleset.branches["managed"].rules[0].pull_request[0].required_approving_review_count == 1
+    condition     = resource.github_repository_ruleset.branches["managed"].rules[0].pull_request[0].required_approving_review_count == 2
     error_message = "required_approving_review_count does not match"
   }
 
