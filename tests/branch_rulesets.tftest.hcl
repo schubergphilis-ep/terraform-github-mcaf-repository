@@ -401,7 +401,7 @@ run "ruleset_no_merge_queue_by_default" {
   }
 }
 
-run "ruleset_rejects_invalid_merge_queue" {
+run "ruleset_merge_queue_boundaries" {
   variables {
     name                   = "rulesets-${run.setup.random_string}"
     branch_protection_type = "ruleset"
@@ -410,9 +410,153 @@ run "ruleset_rejects_invalid_merge_queue" {
       queue = {
         rules = {
           merge_queue = {
-            grouping_strategy    = "SOMEGREEN"
-            merge_method         = "FASTFORWARD"
+            check_response_timeout_minutes    = 360
+            max_entries_to_build              = 100
+            max_entries_to_merge              = 100
+            min_entries_to_merge              = 0
+            min_entries_to_merge_wait_minutes = 0
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition = (
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].check_response_timeout_minutes == 360 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].max_entries_to_build == 100 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].max_entries_to_merge == 100 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].min_entries_to_merge == 0 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].min_entries_to_merge_wait_minutes == 0
+    )
+    error_message = "Merge queue settings at the edges of GitHub's allowed ranges should be accepted"
+  }
+}
+
+run "ruleset_rejects_invalid_merge_queue_grouping_strategy" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue = {
+            grouping_strategy = "SOMEGREEN"
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_invalid_merge_queue_merge_method" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue = {
+            merge_method = "FASTFORWARD"
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_merge_queue_min_entries_above_max" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue = {
             min_entries_to_merge = 10
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_merge_queue_entries_out_of_range" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue = {
+            max_entries_to_build = 101
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_merge_queue_timeout_out_of_range" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue = {
+            check_response_timeout_minutes = 0
           }
         }
       }

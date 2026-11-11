@@ -213,6 +213,29 @@ variable "branch_rulesets" {
     ])
     error_message = "'merge_queue.min_entries_to_merge' must not be greater than 'merge_queue.max_entries_to_merge'."
   }
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branch_rulesets :
+      try(alltrue([
+        for n in [v.rules.merge_queue.max_entries_to_build, v.rules.merge_queue.max_entries_to_merge, v.rules.merge_queue.min_entries_to_merge] :
+        n >= 0 && n <= 100 && floor(n) == n
+      ]), true)
+    ])
+    error_message = "'merge_queue.max_entries_to_build', 'merge_queue.max_entries_to_merge' and 'merge_queue.min_entries_to_merge' must be whole numbers between 0 and 100."
+  }
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branch_rulesets :
+      try(
+        v.rules.merge_queue.check_response_timeout_minutes >= 1 && v.rules.merge_queue.check_response_timeout_minutes <= 360 && floor(v.rules.merge_queue.check_response_timeout_minutes) == v.rules.merge_queue.check_response_timeout_minutes &&
+        v.rules.merge_queue.min_entries_to_merge_wait_minutes >= 0 && v.rules.merge_queue.min_entries_to_merge_wait_minutes <= 360 && floor(v.rules.merge_queue.min_entries_to_merge_wait_minutes) == v.rules.merge_queue.min_entries_to_merge_wait_minutes,
+        true
+      )
+    ])
+    error_message = "'merge_queue.check_response_timeout_minutes' must be a whole number between 1 and 360, and 'merge_queue.min_entries_to_merge_wait_minutes' between 0 and 360."
+  }
 }
 
 variable "branches" {

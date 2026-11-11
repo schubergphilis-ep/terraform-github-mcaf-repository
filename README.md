@@ -116,7 +116,7 @@ The entries in `branch_rulesets` follow the shape of the `github_repository_rule
 - A ruleset without `conditions` protects every protected branch: the default branch, and every branch in `branches` with `use_branch_protection` set. A ruleset with `conditions` targets the given ref patterns instead, such as `refs/heads/release/**` or `~ALL`.
 - Repository and organization admins can bypass a ruleset, like classic protection without `enforce_admins`. Set `bypass_actors = []` to enforce a ruleset for admins too.
 - Pull requests are only required when `rules.pull_request` is set.
-- A merge queue is only required when `rules.merge_queue` is set. Unset merge queue settings use GitHub's defaults. Workflows providing required status checks must also run on the `merge_group` event, otherwise queued pull requests never merge.
+- A merge queue is only required when `rules.merge_queue` is set. Unset merge queue settings use GitHub's defaults. Workflows providing required status checks must also run on the `merge_group` event, otherwise queued pull requests never merge. Merge queues are only available for organization-owned repositories that are public, or private on GitHub Enterprise Cloud.
 
 By default a single ruleset named `Branch protection` protects every protected branch: it blocks deletion and force pushes, requires signed commits, and requires pull requests with 1 approval, code owner review and stale review dismissal. Setting `branch_rulesets` replaces this default:
 
