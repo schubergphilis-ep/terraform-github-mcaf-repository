@@ -275,6 +275,20 @@ resource "github_repository_ruleset" "branches" {
     required_signatures     = each.value.rules.required_signatures
     update                  = each.value.rules.update
 
+    dynamic "merge_queue" {
+      for_each = each.value.rules.merge_queue != null ? [each.value.rules.merge_queue] : []
+
+      content {
+        check_response_timeout_minutes    = merge_queue.value.check_response_timeout_minutes
+        grouping_strategy                 = merge_queue.value.grouping_strategy
+        max_entries_to_build              = merge_queue.value.max_entries_to_build
+        max_entries_to_merge              = merge_queue.value.max_entries_to_merge
+        merge_method                      = merge_queue.value.merge_method
+        min_entries_to_merge              = merge_queue.value.min_entries_to_merge
+        min_entries_to_merge_wait_minutes = merge_queue.value.min_entries_to_merge_wait_minutes
+      }
+    }
+
     dynamic "pull_request" {
       for_each = each.value.rules.pull_request != null ? [each.value.rules.pull_request] : []
 

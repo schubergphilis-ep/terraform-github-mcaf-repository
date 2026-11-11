@@ -342,3 +342,90 @@ run "ruleset_rejects_unknown_type" {
     var.branch_protection_type,
   ]
 }
+
+run "ruleset_merge_queue" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      "Branch protection" = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {
+            grouping_strategy = "HEADGREEN"
+            merge_method      = "SQUASH"
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition = (
+      length(resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue) == 1 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].grouping_strategy == "HEADGREEN" &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].merge_method == "SQUASH" &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].check_response_timeout_minutes == 60 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].max_entries_to_build == 5 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].max_entries_to_merge == 5 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].min_entries_to_merge == 1 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].min_entries_to_merge_wait_minutes == 5
+    )
+    error_message = "Merge queue should use the given settings and GitHub's defaults for the rest"
+  }
+}
+
+run "ruleset_no_merge_queue_by_default" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition     = length(resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue) == 0
+    error_message = "The default ruleset should not require a merge queue"
+  }
+}
+
+run "ruleset_rejects_invalid_merge_queue" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue = {
+            grouping_strategy    = "SOMEGREEN"
+            merge_method         = "FASTFORWARD"
+            min_entries_to_merge = 10
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}

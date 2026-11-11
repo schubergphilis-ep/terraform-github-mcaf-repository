@@ -144,6 +144,16 @@ variable "branch_rulesets" {
       required_signatures              = optional(bool, true)
       update                           = optional(bool, false)
 
+      merge_queue = optional(object({
+        check_response_timeout_minutes    = optional(number, 60)
+        grouping_strategy                 = optional(string, "ALLGREEN")
+        max_entries_to_build              = optional(number, 5)
+        max_entries_to_merge              = optional(number, 5)
+        merge_method                      = optional(string, "MERGE")
+        min_entries_to_merge              = optional(number, 1)
+        min_entries_to_merge_wait_minutes = optional(number, 5)
+      }))
+
       pull_request = optional(object({
         allowed_merge_methods             = optional(list(string))
         dismiss_stale_reviews_on_push     = optional(bool, true)
@@ -169,7 +179,7 @@ variable "branch_rulesets" {
       rules = { pull_request = {} }
     }
   }
-  description = "Branch rulesets to create when `branch_protection_type` is `ruleset`, keyed by ruleset name. A ruleset without `conditions` protects every managed branch that has `use_branch_protection` set. Repository and organization admins can bypass a ruleset unless `bypass_actors` is set to `[]`. Pull requests are only required when `rules.pull_request` is set"
+  description = "Branch rulesets to create when `branch_protection_type` is `ruleset`, keyed by ruleset name. A ruleset without `conditions` protects every managed branch that has `use_branch_protection` set. Repository and organization admins can bypass a ruleset unless `bypass_actors` is set to `[]`. Pull requests are only required when `rules.pull_request` is set, and a merge queue is only required when `rules.merge_queue` is set"
   nullable    = false
 
   validation {
@@ -178,6 +188,30 @@ variable "branch_rulesets" {
       try(length(v.rules.required_status_checks.required_checks) > 0, true)
     ])
     error_message = "'required_checks' must contain at least one check when 'required_status_checks' is set."
+  }
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branch_rulesets :
+      try(contains(["ALLGREEN", "HEADGREEN"], v.rules.merge_queue.grouping_strategy), true)
+    ])
+    error_message = "'merge_queue.grouping_strategy' must be one of 'ALLGREEN' or 'HEADGREEN'."
+  }
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branch_rulesets :
+      try(contains(["MERGE", "REBASE", "SQUASH"], v.rules.merge_queue.merge_method), true)
+    ])
+    error_message = "'merge_queue.merge_method' must be one of 'MERGE', 'REBASE' or 'SQUASH'."
+  }
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branch_rulesets :
+      try(v.rules.merge_queue.min_entries_to_merge <= v.rules.merge_queue.max_entries_to_merge, true)
+    ])
+    error_message = "'merge_queue.min_entries_to_merge' must not be greater than 'merge_queue.max_entries_to_merge'."
   }
 }
 
