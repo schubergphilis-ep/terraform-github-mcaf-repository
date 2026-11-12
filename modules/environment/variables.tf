@@ -1,3 +1,10 @@
+variable "can_admins_bypass" {
+  type        = bool
+  description = "Whether repository administrators may bypass the environment's protection rules (reviewers, wait timer)."
+  default     = true
+  nullable    = false
+}
+
 variable "deployment_policy" {
   type = object({
     branch_patterns = optional(set(string), [])
@@ -11,6 +18,13 @@ variable "deployment_policy" {
 variable "name" {
   type        = string
   description = "Name of the GitHub environment to create."
+}
+
+variable "prevent_self_review" {
+  type        = bool
+  description = "Whether a reviewer may approve a deployment they triggered themselves. Only meaningful with reviewers; GitHub rejects it on an environment without any."
+  default     = false
+  nullable    = false
 }
 
 variable "repository" {

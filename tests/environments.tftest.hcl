@@ -231,3 +231,53 @@ run "variables" {
     error_message = "Variable name does not match: expected myvariable, got ${github_actions_environment_variable.default["myvariable"].variable_name}"
   }
 }
+
+# A gated environment: reviewers who may not approve their own deployment, and no admin bypass.
+run "self_review_prevented" {
+  variables {
+    name       = "gated-${run.setup.random_string}"
+    repository = "basic-${run.setup.random_string}"
+
+    reviewer_teams      = ["myteam"]
+    prevent_self_review = true
+    can_admins_bypass   = false
+  }
+
+  module {
+    source = "./modules/environment"
+  }
+
+  command = plan
+
+  assert {
+    condition     = github_repository_environment.default.prevent_self_review == true
+    error_message = "prevent_self_review does not match: expected true, got ${github_repository_environment.default.prevent_self_review}"
+  }
+  assert {
+    condition     = github_repository_environment.default.can_admins_bypass == false
+    error_message = "can_admins_bypass does not match: expected false, got ${github_repository_environment.default.can_admins_bypass}"
+  }
+}
+
+# The defaults keep today's behaviour: self-review allowed, admins may bypass.
+run "self_review_defaults" {
+  variables {
+    name       = "defaults-${run.setup.random_string}"
+    repository = "basic-${run.setup.random_string}"
+  }
+
+  module {
+    source = "./modules/environment"
+  }
+
+  command = plan
+
+  assert {
+    condition     = github_repository_environment.default.prevent_self_review == false
+    error_message = "prevent_self_review does not match: expected false, got ${github_repository_environment.default.prevent_self_review}"
+  }
+  assert {
+    condition     = github_repository_environment.default.can_admins_bypass == true
+    error_message = "can_admins_bypass does not match: expected true, got ${github_repository_environment.default.can_admins_bypass}"
+  }
+}

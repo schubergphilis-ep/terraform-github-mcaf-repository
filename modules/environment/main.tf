@@ -16,9 +16,11 @@ data "github_user" "default" {
 }
 
 resource "github_repository_environment" "default" {
-  environment = var.name
-  repository  = var.repository
-  wait_timer  = var.wait_timer
+  environment         = var.name
+  repository          = var.repository
+  can_admins_bypass   = var.can_admins_bypass
+  prevent_self_review = var.prevent_self_review
+  wait_timer          = var.wait_timer
 
   deployment_branch_policy {
     # If a branch policy is not defined we configure the environment to allow deploys from protected branches

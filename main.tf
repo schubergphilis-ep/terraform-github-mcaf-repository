@@ -410,14 +410,16 @@ module "environment" {
 
   source = "./modules/environment"
 
-  name              = each.key
-  deployment_policy = each.value.deployment_policy
-  repository        = github_repository.default.name
-  reviewer_teams    = try(each.value.reviewers.teams, null)
-  reviewer_users    = try(each.value.reviewers.users, null)
-  secrets           = each.value.secrets
-  variables         = each.value.variables
-  wait_timer        = each.value.wait_timer
+  name                = each.key
+  can_admins_bypass   = each.value.can_admins_bypass
+  deployment_policy   = each.value.deployment_policy
+  prevent_self_review = each.value.prevent_self_review
+  repository          = github_repository.default.name
+  reviewer_teams      = try(each.value.reviewers.teams, null)
+  reviewer_users      = try(each.value.reviewers.users, null)
+  secrets             = each.value.secrets
+  variables           = each.value.variables
+  wait_timer          = each.value.wait_timer
 }
 
 ################################################################################

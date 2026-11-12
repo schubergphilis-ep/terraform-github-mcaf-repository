@@ -332,9 +332,11 @@ variable "description" {
 
 variable "environments" {
   type = map(object({
-    secrets    = optional(map(string), {})
-    variables  = optional(map(string), {})
-    wait_timer = optional(number, null)
+    can_admins_bypass   = optional(bool, true)
+    prevent_self_review = optional(bool, false)
+    secrets             = optional(map(string), {})
+    variables           = optional(map(string), {})
+    wait_timer          = optional(number, null)
 
     deployment_policy = optional(object({
       branch_patterns = optional(set(string), [])

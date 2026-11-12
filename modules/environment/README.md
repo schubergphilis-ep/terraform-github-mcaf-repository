@@ -87,7 +87,9 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_name"></a> [name](#input\_name) | Name of the GitHub environment to create. | `string` | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Name of the GitHub repository to create the environments in. | `string` | n/a | yes |
+| <a name="input_can_admins_bypass"></a> [can\_admins\_bypass](#input\_can\_admins\_bypass) | Whether repository administrators may bypass the environment's protection rules (reviewers, wait timer). | `bool` | `true` | no |
 | <a name="input_deployment_policy"></a> [deployment\_policy](#input\_deployment\_policy) | Environment deployment policy. | <pre>object({<br/>    branch_patterns = optional(set(string), [])<br/>    tag_patterns    = optional(set(string), [])<br/>  })</pre> | `{}` | no |
+| <a name="input_prevent_self_review"></a> [prevent\_self\_review](#input\_prevent\_self\_review) | Whether a reviewer may approve a deployment they triggered themselves. Only meaningful with reviewers; GitHub rejects it on an environment without any. | `bool` | `false` | no |
 | <a name="input_reviewer_teams"></a> [reviewer\_teams](#input\_reviewer\_teams) | A list of team names to add as reviewers to the environment. | `list(string)` | `[]` | no |
 | <a name="input_reviewer_users"></a> [reviewer\_users](#input\_reviewer\_users) | A list of user names to add as reviewers to the environment. | `list(string)` | `[]` | no |
 | <a name="input_secrets"></a> [secrets](#input\_secrets) | A map of environment secrets to create. | `map(string)` | `{}` | no |
