@@ -616,6 +616,34 @@ run "ruleset_merge_queue_method_from_enabled_methods" {
   }
 }
 
+run "ruleset_merge_queue_method_in_allowed_merge_methods" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+    merge_strategy         = "squash"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue  = {}
+          pull_request = { allowed_merge_methods = ["squash"] }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition     = resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].merge_method == "SQUASH"
+    error_message = "A merge queue whose merge method is in 'allowed_merge_methods' should be accepted"
+  }
+}
+
 run "ruleset_rejects_merge_queue_method_not_in_allowed_merge_methods" {
   variables {
     name                   = "rulesets-${run.setup.random_string}"
