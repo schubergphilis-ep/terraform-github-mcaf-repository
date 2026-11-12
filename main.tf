@@ -164,8 +164,6 @@ resource "github_dependabot_secret" "encrypted" {
   value_encrypted = each.value
 }
 
-# Deleting either resource disables the setting on GitHub, which fails when an organization security configuration
-# enforces it. Set `vulnerability_alerts = null` to leave both settings to the organization.
 resource "github_repository_vulnerability_alerts" "default" {
   count = var.vulnerability_alerts != null ? 1 : 0
 
