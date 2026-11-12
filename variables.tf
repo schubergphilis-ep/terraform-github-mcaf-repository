@@ -149,7 +149,6 @@ variable "branch_rulesets" {
         grouping_strategy                 = optional(string, "ALLGREEN")
         max_entries_to_build              = optional(number, 5)
         max_entries_to_merge              = optional(number, 5)
-        merge_method                      = optional(string, "MERGE")
         min_entries_to_merge              = optional(number, 1)
         min_entries_to_merge_wait_minutes = optional(number, 5)
       }))
@@ -179,7 +178,7 @@ variable "branch_rulesets" {
       rules = { pull_request = {} }
     }
   }
-  description = "Branch rulesets to create when `branch_protection_type` is `ruleset`, keyed by ruleset name. A ruleset without `conditions` protects every managed branch that has `use_branch_protection` set. Repository and organization admins can bypass a ruleset unless `bypass_actors` is set to `[]`. Pull requests are only required when `rules.pull_request` is set, and a merge queue is only required when `rules.merge_queue` is set"
+  description = "Branch rulesets to create when `branch_protection_type` is `ruleset`, keyed by ruleset name. A ruleset without `conditions` protects every managed branch that has `use_branch_protection` set. Repository and organization admins can bypass a ruleset unless `bypass_actors` is set to `[]`. Pull requests are only required when `rules.pull_request` is set, and a merge queue is only required when `rules.merge_queue` is set, which also requires `rules.pull_request`"
   nullable    = false
 
   validation {
@@ -193,17 +192,17 @@ variable "branch_rulesets" {
   validation {
     condition = alltrue([
       for _, v in var.branch_rulesets :
-      try(contains(["ALLGREEN", "HEADGREEN"], v.rules.merge_queue.grouping_strategy), true)
+      v.rules.merge_queue == null || v.rules.pull_request != null
     ])
-    error_message = "'merge_queue.grouping_strategy' must be one of 'ALLGREEN' or 'HEADGREEN'."
+    error_message = "'pull_request' must be set when 'merge_queue' is set, because a merge queue only merges pull requests."
   }
 
   validation {
     condition = alltrue([
       for _, v in var.branch_rulesets :
-      try(contains(["MERGE", "REBASE", "SQUASH"], v.rules.merge_queue.merge_method), true)
+      try(contains(["ALLGREEN", "HEADGREEN"], v.rules.merge_queue.grouping_strategy), true)
     ])
-    error_message = "'merge_queue.merge_method' must be one of 'MERGE', 'REBASE' or 'SQUASH'."
+    error_message = "'merge_queue.grouping_strategy' must be one of 'ALLGREEN' or 'HEADGREEN'."
   }
 
   validation {

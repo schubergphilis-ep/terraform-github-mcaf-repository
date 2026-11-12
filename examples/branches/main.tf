@@ -127,6 +127,7 @@ module "with_merge_queue" {
 
   name                   = "basic"
   branch_protection_type = "ruleset"
+  merge_strategy         = "squash"
 
   branch_rulesets = {
     "Branch protection" = {
@@ -135,7 +136,6 @@ module "with_merge_queue" {
 
         merge_queue = {
           grouping_strategy = "HEADGREEN"
-          merge_method      = "SQUASH"
         }
 
         required_status_checks = {
