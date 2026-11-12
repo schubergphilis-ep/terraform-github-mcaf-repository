@@ -51,7 +51,7 @@ run "ruleset_default" {
   }
 
   assert {
-    condition     = length(resource.github_branch.default) == 3
+    condition     = length(resource.github_branch.additional) == 2
     error_message = "Branches should still be created in ruleset mode"
   }
 

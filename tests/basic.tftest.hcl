@@ -38,9 +38,9 @@ run "basic" {
     error_message = "Default branch does not match"
   }
 
-  // Check that we're managing the default branch
+  // The default branch is not managed as a github_branch, so the module can be destroyed
   assert {
-    condition     = length(resource.github_branch.default) == 1
+    condition     = length(resource.github_branch.additional) == 0
     error_message = "Incorrect number of branches"
   }
 

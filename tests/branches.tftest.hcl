@@ -30,8 +30,8 @@ run "basic" {
   }
 
   assert {
-    condition     = length(resource.github_branch.default) == 2
-    error_message = "Incorrect number of branches"
+    condition     = keys(resource.github_branch.additional) == ["develop"]
+    error_message = "Only non-default branches should be managed as github_branch"
   }
 
   assert {
@@ -142,8 +142,8 @@ run "with_default_branch" {
   }
 
   assert {
-    condition     = length(resource.github_branch.default) == 2
-    error_message = "Incorrect number of branches"
+    condition     = keys(resource.github_branch.additional) == ["develop"]
+    error_message = "Only non-default branches should be managed as github_branch"
   }
 
   // Validate default branch protection settings are being used for the "develop" branch
@@ -260,8 +260,8 @@ run "with_updated_default_branch_protection" {
   }
 
   assert {
-    condition     = length(resource.github_branch.default) == 2
-    error_message = "Incorrect number of branches"
+    condition     = keys(resource.github_branch.additional) == ["develop"]
+    error_message = "Only non-default branches should be managed as github_branch"
   }
 
   assert {
@@ -376,8 +376,8 @@ run "with_custom_branch_protection" {
   }
 
   assert {
-    condition     = length(resource.github_branch.default) == 2
-    error_message = "Incorrect number of branches"
+    condition     = keys(resource.github_branch.additional) == ["develop"]
+    error_message = "Only non-default branches should be managed as github_branch"
   }
 
   assert {
@@ -489,8 +489,8 @@ run "with_no_branch_protection" {
   }
 
   assert {
-    condition     = length(resource.github_branch.default) == 2
-    error_message = "Incorrect number of branches"
+    condition     = keys(resource.github_branch.additional) == ["develop"]
+    error_message = "Only non-default branches should be managed as github_branch"
   }
 
   assert {

@@ -4,6 +4,19 @@ This document captures breaking changes.
 
 When upgrading, it is important to go from one major version to the next. Skipping major versions may cause errors that are not documented here.
 
+## Upgrading to v8.0.1
+
+### The default branch is no longer a `github_branch`
+
+Earlier versions also managed the default branch in `github_branch.default`. GitHub refuses to delete the default branch, so destroying the module (for example, removing a repository) failed with `422 Cannot delete the default branch`. Changing `default_branch` failed in the same way.
+
+Non-default branches now live in `github_branch.additional`. The default branch must already exist, which was already a requirement because it was only ever adopted, never created. A `removed` block in the module drops `github_branch.default` from state without deleting anything. On the first apply after upgrading, the plan shows:
+
+- every `github_branch.default[...]` as "will no longer be managed by Terraform, but will not be destroyed"
+- every non-default branch as created in `github_branch.additional`; the existing branch is adopted, not recreated
+
+No action is needed.
+
 ## Upgrading to v8.0.0
 
 ### Pull requests require 1 approval by default

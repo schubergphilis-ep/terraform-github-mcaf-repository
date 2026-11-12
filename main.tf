@@ -5,6 +5,10 @@ locals {
     var.branches,
   )
 
+  // Branches other than the default branch. The default branch is not a `github_branch`: it already exists (auto_init or
+  // otherwise), and GitHub refuses to delete the default branch, which would make destroying the module fail.
+  additional_branches = { for k, v in local.branches : k => v if k != var.default_branch }
+
   // Branches protected by classic branch protection or, in ruleset mode, by rulesets without conditions.
   protected_branches = [for k, v in local.branches : k if v.branch_protection != null || v.use_branch_protection == true]
 
@@ -173,8 +177,18 @@ resource "github_repository_vulnerability_alerts" "default" {
 # Branch and Branch protection
 ################################################################################
 
-resource "github_branch" "default" {
-  for_each = local.branches
+# v8.0.0 and earlier managed the default branch in `github_branch.default` as well. Forget that resource without deleting
+# anything; `github_branch.additional` adopts the existing non-default branches on the next apply.
+removed {
+  from = github_branch.default
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+resource "github_branch" "additional" {
+  for_each = local.additional_branches
 
   branch        = each.key
   repository    = github_repository.default.name
@@ -185,8 +199,6 @@ resource "github_branch" "default" {
 resource "github_branch_default" "default" {
   branch     = var.default_branch
   repository = github_repository.default.name
-
-  depends_on = [github_branch.default]
 }
 
 resource "github_branch_protection" "default" {
@@ -234,7 +246,7 @@ resource "github_branch_protection" "default" {
   }
 
   depends_on = [
-    github_branch.default,
+    github_branch.additional,
   ]
 }
 
@@ -316,7 +328,7 @@ resource "github_repository_ruleset" "branches" {
   }
 
   depends_on = [
-    github_branch.default,
+    github_branch.additional,
   ]
 }
 
@@ -437,7 +449,7 @@ resource "github_repository_file" "managed" {
   repository          = github_repository.default.name
 
   depends_on = [
-    github_branch.default,
+    github_branch.additional,
   ]
 
   lifecycle {
@@ -458,7 +470,7 @@ resource "github_repository_file" "unmanaged" {
   repository          = github_repository.default.name
 
   depends_on = [
-    github_branch.default,
+    github_branch.additional,
   ]
 
   lifecycle {
