@@ -4,6 +4,32 @@ This document captures breaking changes.
 
 When upgrading, it is important to go from one major version to the next. Skipping major versions may cause errors that are not documented here.
 
+## Upgrading to v8.1.0
+
+### Vulnerability alerts and Dependabot security updates can be left unmanaged
+
+Set `vulnerability_alerts = null` to leave vulnerability alerts and Dependabot security updates to the organization, for example when an organization security configuration enforces them. `github_repository_vulnerability_alerts.default` now has a `count`; Terraform moves the existing `default` instance to `default[0]` automatically.
+
+Destroying either resource disables the setting on GitHub. Under an enforced security configuration that fails with `422 An enforced security configuration prevented modifying dependabot alerts enablement`, which also blocks removing a repository. Forget both resources before destroying, for example when removing the module call for a repository:
+
+```hcl
+removed {
+  from = module.repository.github_repository_vulnerability_alerts.default
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = module.repository.github_repository_dependabot_security_updates.default
+
+  lifecycle {
+    destroy = false
+  }
+}
+```
+
 ## Upgrading to v8.0.0
 
 ### Pull requests require 1 approval by default

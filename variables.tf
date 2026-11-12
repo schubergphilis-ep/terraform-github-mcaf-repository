@@ -307,7 +307,7 @@ variable "dependabot_enabled" {
   description = "Set to true to enable Dependabot alerts and security updates"
 
   validation {
-    condition     = (!var.dependabot_enabled) || var.vulnerability_alerts
+    condition     = (!var.dependabot_enabled) || var.vulnerability_alerts == true
     error_message = "Vulnerability alerts must be enabled to use Dependabot"
   }
 }
@@ -559,7 +559,8 @@ variable "visibility" {
 variable "vulnerability_alerts" {
   type        = bool
   default     = true
-  description = "Set to true to enable security alerts for vulnerable dependencies"
+  nullable    = true
+  description = "Set to true to enable security alerts for vulnerable dependencies. Set to null to leave vulnerability alerts and Dependabot security updates unmanaged, e.g. when an organization security configuration enforces them"
 }
 
 variable "workflow_permissions" {
