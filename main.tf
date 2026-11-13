@@ -332,17 +332,6 @@ resource "github_repository_ruleset" "branches" {
     }
   }
 
-  lifecycle {
-    precondition {
-      condition = (
-        each.value.rules.merge_queue == null ? true :
-        each.value.rules.pull_request.allowed_merge_methods == null ? true :
-        contains(each.value.rules.pull_request.allowed_merge_methods, lower(local.merge_queue_merge_method))
-      )
-      error_message = "The merge queue in ruleset '${each.key}' uses the repository's merge method '${lower(local.merge_queue_merge_method)}', which is not in 'pull_request.allowed_merge_methods'."
-    }
-  }
-
   depends_on = [
     github_branch.default,
   ]

@@ -666,7 +666,7 @@ run "ruleset_rejects_merge_queue_method_not_in_allowed_merge_methods" {
   command = plan
 
   expect_failures = [
-    resource.github_repository_ruleset.branches,
+    var.branch_rulesets,
   ]
 }
 

@@ -235,6 +235,16 @@ variable "branch_rulesets" {
     ])
     error_message = "'merge_queue.check_response_timeout_minutes' must be a whole number between 1 and 360, and 'merge_queue.min_entries_to_merge_wait_minutes' between 0 and 360."
   }
+
+  validation {
+    condition = alltrue([
+      for _, v in var.branch_rulesets :
+      v.rules.merge_queue == null ? true :
+      try(v.rules.pull_request.allowed_merge_methods, null) == null ? true :
+      contains(v.rules.pull_request.allowed_merge_methods, lower(local.merge_queue_merge_method))
+    ])
+    error_message = "The merge queue uses the repository's merge method '${lower(local.merge_queue_merge_method)}', which must be in 'pull_request.allowed_merge_methods' of every ruleset that sets 'merge_queue'."
+  }
 }
 
 variable "branches" {
