@@ -342,3 +342,355 @@ run "ruleset_rejects_unknown_type" {
     var.branch_protection_type,
   ]
 }
+
+run "ruleset_merge_queue" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+    merge_strategy         = "squash"
+
+    branch_rulesets = {
+      "Branch protection" = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {
+            grouping_strategy = "HEADGREEN"
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition = (
+      length(resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue) == 1 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].grouping_strategy == "HEADGREEN" &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].merge_method == "SQUASH" &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].check_response_timeout_minutes == 60 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].max_entries_to_build == 5 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].max_entries_to_merge == 5 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].min_entries_to_merge == 1 &&
+      resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue[0].min_entries_to_merge_wait_minutes == 5
+    )
+    error_message = "Merge queue should use the given settings and GitHub's defaults for the rest"
+  }
+}
+
+run "ruleset_no_merge_queue_by_default" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition     = length(resource.github_repository_ruleset.branches["Branch protection"].rules[0].merge_queue) == 0
+    error_message = "The default ruleset should not require a merge queue"
+  }
+}
+
+run "ruleset_merge_queue_boundaries" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {
+            check_response_timeout_minutes    = 360
+            max_entries_to_build              = 100
+            max_entries_to_merge              = 100
+            min_entries_to_merge              = 0
+            min_entries_to_merge_wait_minutes = 0
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition = (
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].check_response_timeout_minutes == 360 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].max_entries_to_build == 100 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].max_entries_to_merge == 100 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].min_entries_to_merge == 0 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].min_entries_to_merge_wait_minutes == 0 &&
+      resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].merge_method == "MERGE"
+    )
+    error_message = "Merge queue settings at the edges of GitHub's allowed ranges should be accepted"
+  }
+}
+
+run "ruleset_rejects_invalid_merge_queue_grouping_strategy" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {
+            grouping_strategy = "SOMEGREEN"
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_merge_queue_min_entries_above_max" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {
+            min_entries_to_merge = 10
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_merge_queue_entries_out_of_range" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {
+            max_entries_to_build = 101
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_merge_queue_timeout_out_of_range" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {
+            check_response_timeout_minutes = 0
+          }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_merge_queue_method_from_merge_strategy" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+    merge_strategy         = "squash"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {}
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition     = resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].merge_method == "SQUASH"
+    error_message = "The merge queue should use the repository's merge_strategy"
+  }
+}
+
+run "ruleset_merge_queue_method_from_enabled_methods" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+    allow_merge_commit     = false
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          pull_request = {}
+
+          merge_queue = {}
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition     = resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].merge_method == "SQUASH"
+    error_message = "Without merge_strategy, the merge queue should use the first merge method enabled on the repository"
+  }
+}
+
+run "ruleset_merge_queue_method_in_allowed_merge_methods" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+    merge_strategy         = "squash"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue  = {}
+          pull_request = { allowed_merge_methods = ["squash"] }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  assert {
+    condition     = resource.github_repository_ruleset.branches["queue"].rules[0].merge_queue[0].merge_method == "SQUASH"
+    error_message = "A merge queue whose merge method is in 'allowed_merge_methods' should be accepted"
+  }
+}
+
+run "ruleset_rejects_merge_queue_method_not_in_allowed_merge_methods" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue  = {}
+          pull_request = { allowed_merge_methods = ["squash"] }
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}
+
+run "ruleset_rejects_merge_queue_without_pull_request" {
+  variables {
+    name                   = "rulesets-${run.setup.random_string}"
+    branch_protection_type = "ruleset"
+
+    branch_rulesets = {
+      queue = {
+        rules = {
+          merge_queue = {}
+        }
+      }
+    }
+  }
+
+  module {
+    source = "./"
+  }
+
+  command = plan
+
+  expect_failures = [
+    var.branch_rulesets,
+  ]
+}

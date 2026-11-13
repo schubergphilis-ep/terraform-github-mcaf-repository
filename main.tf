@@ -13,6 +13,9 @@ locals {
   allow_rebase_merge = var.merge_strategy != null ? var.merge_strategy == "rebase" : var.allow_rebase_merge
   allow_squash_merge = var.merge_strategy != null ? var.merge_strategy == "squash" : var.allow_squash_merge
 
+  # Merge queues use the first merge method enabled on the repository, which is merge_strategy when that is set.
+  merge_queue_merge_method = local.allow_merge_commit ? "MERGE" : local.allow_squash_merge ? "SQUASH" : "REBASE"
+
   # Build commit messages for repository files. When none of the commit message options are set,
   # the message is null and the provider uses its default behavior.
   repository_file_commit_messages = {
@@ -274,6 +277,20 @@ resource "github_repository_ruleset" "branches" {
     required_linear_history = each.value.rules.required_linear_history
     required_signatures     = each.value.rules.required_signatures
     update                  = each.value.rules.update
+
+    dynamic "merge_queue" {
+      for_each = each.value.rules.merge_queue != null ? [each.value.rules.merge_queue] : []
+
+      content {
+        check_response_timeout_minutes    = merge_queue.value.check_response_timeout_minutes
+        grouping_strategy                 = merge_queue.value.grouping_strategy
+        max_entries_to_build              = merge_queue.value.max_entries_to_build
+        max_entries_to_merge              = merge_queue.value.max_entries_to_merge
+        merge_method                      = local.merge_queue_merge_method
+        min_entries_to_merge              = merge_queue.value.min_entries_to_merge
+        min_entries_to_merge_wait_minutes = merge_queue.value.min_entries_to_merge_wait_minutes
+      }
+    }
 
     dynamic "pull_request" {
       for_each = each.value.rules.pull_request != null ? [each.value.rules.pull_request] : []

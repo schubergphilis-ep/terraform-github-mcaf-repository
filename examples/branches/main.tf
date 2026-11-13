@@ -118,3 +118,30 @@ module "with_custom_rulesets" {
     }
   }
 }
+
+// This example requires pull requests to the managed branches to be merged through a merge queue
+module "with_merge_queue" {
+  #checkov:skip=CKV_GIT_4:Ensure GitHub Actions secrets are encrypted - n/a for the example
+
+  source = "../.."
+
+  name                   = "basic"
+  branch_protection_type = "ruleset"
+  merge_strategy         = "squash"
+
+  branch_rulesets = {
+    "Branch protection" = {
+      rules = {
+        pull_request = {}
+
+        merge_queue = {
+          grouping_strategy = "HEADGREEN"
+        }
+
+        required_status_checks = {
+          required_checks = [{ context = "test" }]
+        }
+      }
+    }
+  }
+}
