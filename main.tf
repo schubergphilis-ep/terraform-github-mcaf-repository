@@ -122,7 +122,7 @@ resource "github_repository_custom_property" "default" {
 
 # Configure Dependabot security updates for the repository.
 resource "github_repository_dependabot_security_updates" "default" {
-  count = var.vulnerability_alerts ? 1 : 0
+  count = var.vulnerability_alerts == true ? 1 : 0
 
   repository = github_repository.default.name
   enabled    = var.dependabot_enabled
@@ -154,7 +154,7 @@ resource "github_repository_pages" "default" {
 resource "github_dependabot_secret" "plaintext" {
   for_each = var.dependabot_plaintext_secrets
 
-  repository  = github_repository_dependabot_security_updates.default[0].repository
+  repository  = try(github_repository_dependabot_security_updates.default[0].repository, github_repository.default.name)
   secret_name = each.key
   value       = each.value
 }
@@ -162,12 +162,14 @@ resource "github_dependabot_secret" "plaintext" {
 resource "github_dependabot_secret" "encrypted" {
   for_each = var.dependabot_encrypted_secrets
 
-  repository      = github_repository_dependabot_security_updates.default[0].repository
+  repository      = try(github_repository_dependabot_security_updates.default[0].repository, github_repository.default.name)
   secret_name     = each.key
   value_encrypted = each.value
 }
 
 resource "github_repository_vulnerability_alerts" "default" {
+  count = var.vulnerability_alerts != null ? 1 : 0
+
   repository = github_repository.default.name
   enabled    = var.vulnerability_alerts
 }
