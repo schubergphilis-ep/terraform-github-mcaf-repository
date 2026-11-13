@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [8.1.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v8.0.0...v8.1.0) (2026-11-13)
+
+
+### 🚀 Features
+
+* add merge queue support ([#16](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/issues/16)) ([83c0140](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/commit/83c01403cea562d5b94f9f881d1a91240d1d12ea))
+
 ## [8.0.0](https://github.com/schubergphilis-ep/terraform-github-mcaf-repository/compare/v7.1.0...v8.0.0) (2026-11-06)
 
 
